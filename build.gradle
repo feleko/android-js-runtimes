@@ -1,7 +1,6 @@
-// Fork adjusted group to match JitPack convention: com.github.<user>.<repo>
-group 'com.github.feleko.android-js-runtimes'
-// Bump version to align with original 0.3.5 plus fork suffix
-version '1.0.0'
+// Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
+group 'com.github.feleko'
+version '1.0.1'
 
 buildscript {
     repositories {
@@ -51,96 +50,8 @@ subprojects {
             disable 'InvalidPackage'
         }
 
-
         testOptions {
-            unitTests.all {
-                enabled false
-            }
-    }
-    // Toolchain is handled via compileOptions above
-    }
-
-
-//    publishing {
-//        publications {
-//            publication(MavenPublication) {
-//                pom {
-//                    name = 'Android JS Runtimes'
-//
-//                }
-//
-//                afterEvaluate {
-//                    artifact bundleReleaseAar
-//                }
-//
-//            }
-//        }
-//
-//        repositories {
-//            mavenLocal()
-//        }
-//
-//    }
-    publishing {
-        publications {
-            android.libraryVariants.all { variant ->
-                // Only publish release variants to avoid clutter
-                // if (!variant.name.toLowerCase().contains("release")) return
-
-                println("Publishing config ${variant.name} for project ${project.name}...")
-
-
-                def variantArtifactId = "fastdev-jsruntimes-${project.name}"
-                def publicationName = "${project.name}${variant.name.capitalize()}Publication"
-
-                "$publicationName"(MavenPublication) {
-                    artifactId variantArtifactId
-
-                    // AAR
-                    artifact(variant.outputs[0].packageLibrary)
-
-                    // README.md
-                    if (file("$projectDir/README.md").exists()) {
-                        artifact("$projectDir/README.md") {
-                            classifier "README"
-                        }
-                    }
-//
-//                    // JavaDoc
-//                    if (file("$buildDir/outputs/javadoc/${artifactId}-javadoc.jar").exists()) {
-//                        artifact("$buildDir/outputs/javadoc/${artifactId}-javadoc.jar") {
-//                            classifier "javadoc"
-//                        }
-//                    }
-
-                    pom.withXml {
-                        def dependenciesNode = asNode().appendNode('dependencies')
-
-                        //Iterate over "api" and "implementation" dependencies (we don't want the test ones), adding a <dependency> node for each
-                        //The publication doesn't know about our dependencies, so we have to manually add them to the pom
-                        configurations.api.allDependencies.findAll {
-                            it.name != 'unspecified'
-                        }.each {
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', it.group)
-                            dependencyNode.appendNode('artifactId', it.name)
-                            dependencyNode.appendNode('version', it.version)
-                        }
-                        configurations.implementation.allDependencies.findAll {
-                            it.name != 'unspecified'
-                        }.each {
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', it.group)
-                            dependencyNode.appendNode('artifactId', it.name)
-                            dependencyNode.appendNode('version', it.version)
-                        }
-                    }
-
-                    repositories {
-                        mavenLocal()
-                    }
-                }
-            }
+            unitTests.all { enabled false }
         }
     }
 
