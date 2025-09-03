@@ -48,7 +48,43 @@ android {
 
         }
     }
+
+    // Ensure we can add generated jniLibs (libc++_shared.so) copied from NDK
+    sourceSets {
+        main {
+            jniLibs.srcDirs += ["$buildDir/generated/jniLibs"]
+        }
+    }
 }
+
+// Copy libc++_shared.so from the local NDK into a generated jniLibs folder so that
+// the produced fat AAR contains the C++ runtime required by libjsc.so. Without this
+// the app can crash at runtime with: dlopen failed: library "libc++_shared.so" not found.
+def abiList = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+tasks.register('bundleLibCppShared') {
+    doLast {
+        def ndkDir = android.ndkDirectory
+        if (!ndkDir || !ndkDir.exists()) {
+            throw new GradleException("NDK directory not found. Required to bundle libc++_shared.so")
+        }
+        abiList.each { abi ->
+            def src = new File(ndkDir, "sources/cxx-stl/llvm-libc++/libs/${abi}/libc++_shared.so")
+            if (!src.exists()) {
+                logger.warn("[jsc] libc++_shared.so not found for ABI ${abi} at ${src}. ABI will be skipped.")
+            } else {
+                def destDir = new File("$buildDir/generated/jniLibs/${abi}")
+                destDir.mkdirs()
+                project.copy { spec ->
+                    spec.from(src)
+                    spec.into(destDir)
+                }
+            }
+        }
+    }
+}
+
+// Make sure native libs are prepared before packaging / merging.
+preBuild.dependsOn tasks.named('bundleLibCppShared')
 
 dependencies {
     embed "org.webkit:android-jsc:r250231"

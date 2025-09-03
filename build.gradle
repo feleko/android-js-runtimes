@@ -1,7 +1,7 @@
 // Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
 // Root coordinates
 group 'com.github.feleko'
-version '1.0.10'
+version '1.0.11'
 
 buildscript {
     repositories {
