@@ -1,3 +1,7 @@
+## SDKMAN! environment for android-js-runtimes
+## Keep versions compatible with AGP 7.1.3 (needs Gradle 7.3.x, Java 11)
+java=11.0.23-tem
+gradle=7.3.3
 # SDKMAN! per-project configuration
 # Run `sdk env install` to install missing candidates
 # and `sdk env` (or enable auto-env) to activate.

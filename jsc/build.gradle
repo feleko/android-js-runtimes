@@ -1,4 +1,4 @@
-group 'com.github.feleko.android-js-runtimes'
+// Inherit group & version from root
 //version '1.0.0'
 
 buildscript {
