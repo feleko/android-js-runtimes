@@ -1,7 +1,7 @@
 // Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
 // Root coordinates
 group 'com.github.feleko'
-version '1.0.8'
+version '1.0.9'
 
 buildscript {
     repositories {
@@ -58,9 +58,23 @@ subprojects {
         }
     }
 
-    // Standard release publication for JitPack
+    // Standard release publication for JitPack (with fallback + metadata)
     plugins.withId('maven-publish') {
         afterEvaluate { prj ->
+            // sourcesJar (even if empty Java sources, helps IDEs)
+            if (!prj.tasks.findByName('sourcesJar')) {
+                prj.tasks.register('sourcesJar', Jar) { t ->
+                    t.archiveClassifier.set('sources')
+                    if (prj.extensions.findByName('android')) {
+                        def androidExt = prj.extensions.getByName('android')
+                        if (androidExt.hasProperty('sourceSets')) {
+                            from androidExt.sourceSets.main.java.srcDirs
+                        }
+                    }
+                    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+                }
+            }
+
             publishing {
                 publications {
                     release(MavenPublication) {
@@ -70,17 +84,29 @@ subprojects {
                         if (prj.components.findByName('release')) {
                             from prj.components.release
                         } else {
-                            // Fallback: attach built AAR manually (will work when component auto-creation disabled)
                             def aarFile = prj.layout.buildDirectory.file("outputs/aar/${prj.name}-release.aar").get().asFile
                             artifact(aarFile) { builtBy prj.tasks.named('assembleRelease') }
+                        }
+                        if (prj.tasks.findByName('sourcesJar')) artifact prj.tasks.named('sourcesJar')
+                        pom {
+                            name.set("android-js-runtimes-${prj.name}")
+                            description.set("Forked Android JavaScript runtimes (${prj.name}) packaged (JSC / QuickJS) for JitPack consumption.")
+                            url.set("https://github.com/feleko/android-js-runtimes")
+                            licenses { license { name.set("MIT License"); url.set("https://opensource.org/licenses/MIT") } }
+                            scm {
+                                url.set("https://github.com/feleko/android-js-runtimes")
+                                connection.set("scm:git:git://github.com/feleko/android-js-runtimes.git")
+                                developerConnection.set("scm:git:ssh://git@github.com/feleko/android-js-runtimes.git")
+                            }
+                            developers { developer { id.set("feleko") } }
                         }
                     }
                 }
                 repositories { mavenLocal() }
             }
-            // Ensure fat-aar output is built before publishing (if plugin present)
+            // Explicit dependency to avoid implicit warnings
             if (prj.tasks.findByName('reBundleAarRelease')) {
-                prj.tasks.matching { it.name == 'publishReleasePublicationToMavenLocal' || it.name == 'generateMetadataFileForReleasePublication' }.configureEach {
+                prj.tasks.matching { it.name in [ 'publishReleasePublicationToMavenLocal', 'generateMetadataFileForReleasePublication', 'generatePomFileForReleasePublication' ] }.configureEach {
                     dependsOn prj.tasks.named('reBundleAarRelease')
                 }
             }
