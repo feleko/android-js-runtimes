@@ -1,6 +1,6 @@
 // Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
 group 'com.github.feleko'
-version '1.0.1'
+version '1.0.2'
 
 buildscript {
     repositories {
@@ -52,6 +52,16 @@ subprojects {
 
         testOptions {
             unitTests.all { enabled false }
+        }
+
+        // Minimal publication (release only) so JitPack can pick artifacts
+        afterEvaluate { prj ->
+            if (plugins.hasPlugin('com.android.library') && prj.components.findByName('release')) {
+                prj.publishing {
+                    publications { release(MavenPublication) { from prj.components.release } }
+                    repositories { mavenLocal() }
+                }
+            }
         }
     }
 
