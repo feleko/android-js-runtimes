@@ -1,7 +1,7 @@
 // Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
 // Root coordinates
 group 'com.github.feleko'
-version '1.0.7'
+version '1.0.8'
 
 buildscript {
     repositories {
@@ -61,26 +61,27 @@ subprojects {
     // Standard release publication for JitPack
     plugins.withId('maven-publish') {
         afterEvaluate { prj ->
-            if (prj.components.findByName('release')) {
-                publishing {
-                    publications {
-                        release(MavenPublication) {
+            publishing {
+                publications {
+                    release(MavenPublication) {
+                        groupId = prj.group
+                        artifactId = prj.name
+                        version = prj.version
+                        if (prj.components.findByName('release')) {
                             from prj.components.release
-                            groupId = prj.group
-                            artifactId = prj.name
-                            version = prj.version
+                        } else {
+                            // Fallback: attach built AAR manually (will work when component auto-creation disabled)
+                            def aarFile = prj.layout.buildDirectory.file("outputs/aar/${prj.name}-release.aar").get().asFile
+                            artifact(aarFile) { builtBy prj.tasks.named('assembleRelease') }
                         }
                     }
-                    repositories { mavenLocal() }
                 }
-                // Ensure fat-aar output is built before publishing (if plugin present)
-                if (prj.tasks.findByName('reBundleAarRelease')) {
-                    if (prj.tasks.findByName('publishReleasePublicationToMavenLocal')) {
-                        prj.tasks.named('publishReleasePublicationToMavenLocal') { dependsOn prj.tasks.named('reBundleAarRelease') }
-                    }
-                    if (prj.tasks.findByName('generateMetadataFileForReleasePublication')) {
-                        prj.tasks.named('generateMetadataFileForReleasePublication') { dependsOn prj.tasks.named('reBundleAarRelease') }
-                    }
+                repositories { mavenLocal() }
+            }
+            // Ensure fat-aar output is built before publishing (if plugin present)
+            if (prj.tasks.findByName('reBundleAarRelease')) {
+                prj.tasks.matching { it.name == 'publishReleasePublicationToMavenLocal' || it.name == 'generateMetadataFileForReleasePublication' }.configureEach {
+                    dependsOn prj.tasks.named('reBundleAarRelease')
                 }
             }
         }
