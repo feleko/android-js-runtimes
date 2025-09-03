@@ -21,10 +21,6 @@ repositories {
         // Local Maven repo containing AARs with JSC library built for Android
         url "$projectDir/../download-jsc/libs/250231.0.0/package/dist"
     }
-    maven {
-        // Local Maven repo containing AARs with JSC library built for Android
-        url "$projectDir/../download-jsc/libs/245459.0.0/package/dist"
-    }
 }
 
 apply plugin: 'com.kezong.fat-aar'
@@ -56,5 +52,4 @@ android {
 
 dependencies {
     embed "org.webkit:android-jsc:r250231"
-    embed "org.webkit:android-jsc-cppruntime:r245459"
 }
