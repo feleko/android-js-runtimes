@@ -1,0 +1,9 @@
+# SDKMAN! per-project configuration
+# Run `sdk env install` to install missing candidates
+# and `sdk env` (or enable auto-env) to activate.
+
+# Adopt/Temurin JDK 17 LTS (change if you prefer another distro)
+java=17.0.11-tem
+
+# Ensure matching Gradle version for AGP 8.7.2
+gradle=8.7

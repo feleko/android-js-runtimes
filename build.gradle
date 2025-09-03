@@ -1,5 +1,7 @@
-group 'io.abner.fastdev.android'
-version '0.3.4'
+// Fork adjusted group to match JitPack convention: com.github.<user>.<repo>
+group 'com.github.feleko.android-js-runtimes'
+// Bump version to align with original 0.3.5 plus fork suffix
+version '1.0.0'
 
 buildscript {
     repositories {
@@ -16,7 +18,7 @@ buildscript {
 rootProject.allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -32,9 +34,16 @@ subprojects {
     apply plugin: 'maven-publish'
 
     android {
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_11
+            targetCompatibility JavaVersion.VERSION_11
+        }
+        if (this.hasProperty('kotlin')) {
+            kotlin { jvmToolchain(11) }
+        }
 
 
-        compileSdkVersion 29
+    compileSdkVersion 30
         defaultConfig {
             minSdkVersion 21
         }
@@ -47,7 +56,8 @@ subprojects {
             unitTests.all {
                 enabled false
             }
-        }
+    }
+    // Toolchain is handled via compileOptions above
     }
 
 
@@ -74,7 +84,8 @@ subprojects {
     publishing {
         publications {
             android.libraryVariants.all { variant ->
-               // if (!variant.name.contains("Release")) return
+                // Only publish release variants to avoid clutter
+                // if (!variant.name.toLowerCase().contains("release")) return
 
                 println("Publishing config ${variant.name} for project ${project.name}...")
 

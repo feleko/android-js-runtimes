@@ -1,4 +1,4 @@
-group 'io.abner.fastdev.android'
+group 'com.github.feleko.android-js-runtimes'
 //version '1.0.0'
 
 buildscript {
@@ -30,10 +30,16 @@ repositories {
 apply plugin: 'com.kezong.fat-aar'
 
 android {
+    namespace "com.github.feleko.android_js_runtimes.jsc"
 
     packagingOptions {
         pickFirst '**/libjsc.so'
         pickFirst '**/libc++_shared.so'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     defaultConfig {
