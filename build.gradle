@@ -1,6 +1,7 @@
 // Simplified group for JitPack (com.github.<user>) so artifacts become com.github.feleko:<module>:1.0.1
+// Root coordinates
 group 'com.github.feleko'
-version '1.0.2'
+version '1.0.5'
 
 buildscript {
     repositories {
@@ -14,7 +15,9 @@ buildscript {
     }
 }
 
-rootProject.allprojects {
+allprojects {
+    group = rootProject.group
+    version = rootProject.version
     repositories {
         google()
         mavenCentral()
@@ -53,13 +56,31 @@ subprojects {
         testOptions {
             unitTests.all { enabled false }
         }
+    }
 
-        // Minimal publication (release only) so JitPack can pick artifacts
+    // Standard release publication for JitPack
+    plugins.withId('maven-publish') {
         afterEvaluate { prj ->
-            if (plugins.hasPlugin('com.android.library') && prj.components.findByName('release')) {
-                prj.publishing {
-                    publications { release(MavenPublication) { from prj.components.release } }
+            if (prj.components.findByName('release')) {
+                publishing {
+                    publications {
+                        release(MavenPublication) {
+                            from prj.components.release
+                            groupId = prj.group
+                            artifactId = prj.name
+                            version = prj.version
+                        }
+                    }
                     repositories { mavenLocal() }
+                }
+                // Ensure fat-aar output is built before publishing (if plugin present)
+                if (prj.tasks.findByName('reBundleAarRelease')) {
+                    if (prj.tasks.findByName('publishReleasePublicationToMavenLocal')) {
+                        prj.tasks.named('publishReleasePublicationToMavenLocal') { dependsOn prj.tasks.named('reBundleAarRelease') }
+                    }
+                    if (prj.tasks.findByName('generateMetadataFileForReleasePublication')) {
+                        prj.tasks.named('generateMetadataFileForReleasePublication') { dependsOn prj.tasks.named('reBundleAarRelease') }
+                    }
                 }
             }
         }
