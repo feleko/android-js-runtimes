@@ -91,6 +91,6 @@ tasks.register('bundleLibCppShared') {
 preBuild.dependsOn tasks.named('bundleLibCppShared')
 
 dependencies {
+    // Single JSC revision (r250231) to avoid ABI conflicts and duplicate libjsc.so
     embed "org.webkit:android-jsc:r250231"
-    embed "org.webkit:android-jsc-cppruntime:r245459"
 }
