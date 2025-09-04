@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 Dependency:
 
 ```gradle
-implementation "com.github.feleko:jsc:1.0.18"
+implementation "com.github.feleko:jsc:1.0.19"
 ```
 
 ## Integration – zasady bezpiecznego użycia JSC
@@ -40,6 +40,14 @@ Task `verifySingleJscEmbed` failuje build jeśli wykryje więcej niż jedno `and
 W `release` ustawiono `debugSymbolLevel FULL` – ułatwia symbolizację natywnych crashy.
 
 Jeśli build agent (np. JitPack) nie ma zainstalowanego NDK, bundlowanie `libc++_shared.so` jest pomijane (log WARN). Wtedy biblioteka C++ może pochodzić z innej zależności Twojej aplikacji. Jeśli w runtime pojawi się błąd "library libc++_shared.so not found" – zbuduj projekt z zainstalowanym NDK lokalnie i opublikuj AAR.
+
+### Opcjonalne wyłączenie bundlowania libc++
+Jeśli Twoja aplikacja (lub inne AAR-y) już dostarczają `libc++_shared.so`, możesz wyłączyć kopiowanie żeby zmniejszyć ryzyko duplikatów i przyspieszyć build:
+
+```
+./gradlew -Pjsc.bundleLibCpp=false :jsc:assembleRelease
+```
+Domyślnie `jsc.bundleLibCpp=true`.
 
 ## License
 MIT

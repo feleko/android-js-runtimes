@@ -74,8 +74,13 @@ android {
 // the produced fat AAR contains the C++ runtime required by libjsc.so. Without this
 // the app can crash at runtime with: dlopen failed: library "libc++_shared.so" not found.
 def abiList = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+def bundleLibCpp = (project.findProperty('jsc.bundleLibCpp') ?: 'true').toString().toBoolean()
 tasks.register('bundleLibCppShared') {
     doLast {
+        if (!bundleLibCpp) {
+            logger.lifecycle("[jsc] Skipping libc++_shared bundling (jsc.bundleLibCpp=false)")
+            return
+        }
         def ndkDir = android.ndkDirectory
         if (!ndkDir || !ndkDir.exists()) {
             logger.warn("[jsc] NDK not installed on this build agent -> skipping bundling libc++_shared.so (will rely on upstream dependency/app). If your app crashes with missing libc++_shared.so, build with NDK installed.")
