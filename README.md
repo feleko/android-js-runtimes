@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 Dependency:
 
 ```gradle
-implementation "com.github.feleko:jsc:1.0.16"
+implementation "com.github.feleko:jsc:1.0.18"
 ```
 
 ## Integration – zasady bezpiecznego użycia JSC
@@ -38,6 +38,8 @@ Minimalne reguły aby uniknąć crashy typu SIGSEGV w `JSValueCreateJSONString`:
 ## Build Guard
 Task `verifySingleJscEmbed` failuje build jeśli wykryje więcej niż jedno `android-jsc` w zależnościach (chroni przed ABI conflict).  
 W `release` ustawiono `debugSymbolLevel FULL` – ułatwia symbolizację natywnych crashy.
+
+Jeśli build agent (np. JitPack) nie ma zainstalowanego NDK, bundlowanie `libc++_shared.so` jest pomijane (log WARN). Wtedy biblioteka C++ może pochodzić z innej zależności Twojej aplikacji. Jeśli w runtime pojawi się błąd "library libc++_shared.so not found" – zbuduj projekt z zainstalowanym NDK lokalnie i opublikuj AAR.
 
 ## License
 MIT

@@ -126,3 +126,14 @@ tasks.register('verifySingleJscEmbed') {
 }
 
 preBuild.dependsOn tasks.named('verifySingleJscEmbed')
+
+// Ensure publication tasks wait for fat-aar reBundle output (removes implicit dependency warnings)
+gradle.projectsEvaluated {
+    def rebundle = tasks.findByName('reBundleAarRelease')
+    if (rebundle) {
+        ['publishReleasePublicationToMavenLocal', 'generateMetadataFileForReleasePublication', 'generatePomFileForReleasePublication'].each { n ->
+            def t = tasks.findByName(n)
+            if (t) t.dependsOn rebundle
+        }
+    }
+}
