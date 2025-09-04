@@ -28,6 +28,10 @@ apply plugin: 'com.kezong.fat-aar'
 android {
     namespace "com.github.feleko.android_js_runtimes.jsc"
 
+    // Pin an NDK version (pre-r23) so the legacy libc++ path used below exists and JitPack auto-downloads it.
+    // If you want to change, prefer staying < 23 until bundleLibCppShared is updated for new layout.
+    ndkVersion "21.4.7075529"
+
     packagingOptions {
         pickFirst '**/libjsc.so'
         pickFirst '**/libc++_shared.so'
@@ -74,7 +78,8 @@ tasks.register('bundleLibCppShared') {
     doLast {
         def ndkDir = android.ndkDirectory
         if (!ndkDir || !ndkDir.exists()) {
-            throw new GradleException("NDK directory not found. Required to bundle libc++_shared.so")
+            logger.warn("[jsc] NDK not installed on this build agent -> skipping bundling libc++_shared.so (will rely on upstream dependency/app). If your app crashes with missing libc++_shared.so, build with NDK installed.")
+            return
         }
         abiList.each { abi ->
             def src = new File(ndkDir, "sources/cxx-stl/llvm-libc++/libs/${abi}/libc++_shared.so")
