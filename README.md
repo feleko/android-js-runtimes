@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 Dependency:
 
 ```gradle
-implementation "com.github.feleko:jsc:1.0.22"
+implementation "com.github.feleko:jsc:1.1.0"
 ```
 
 ## Integration – zasady bezpiecznego użycia JSC
@@ -51,6 +51,22 @@ Jeśli Twoja aplikacja (lub inne AAR-y) już dostarczają `libc++_shared.so`, mo
 ```
 
 Domyślnie `jsc.bundleLibCpp=true`.
+
+### Automatyczna weryfikacja obecności libc++
+Build task `verifyLibCppBundled` (wykonywany przed publikacją) sprawdza czy w AAR są `jni/<abi>/libc++_shared.so` dla wymaganych ABI (domyślnie `arm64-v8a,armeabi-v7a`). Konfiguracja własnej listy:
+```
+./gradlew -Pjsc.requiredAbis=arm64-v8a,armeabi-v7a,x86_64 :jsc:verifyLibCppBundled
+```
+
+Jeżeli brakuje którejś – build fail.
+
+### Troubleshooting (dlopen failed: libc++_shared.so not found)
+1. Upewnij się, że używasz dependency `com.github.feleko:jsc:<version>` z `implementation`, nie `compileOnly`.
+2. Rozpakuj AAR (`unzip -l jsc-<version>.aar | grep libc++_shared`) – musi zawierać Twoje ABI.
+3. Rozpakuj APK (`unzip -l app-release.apk | grep libc++_shared`) – jeśli brak w APK a był w AAR, sprawdź `packagingOptions` i `jniLibs.srcDirs`.
+4. Jeśli świadomie dostarczasz libc++ w innym module, ustaw `-Pjsc.bundleLibCpp=false`.
+5. Wymuś fail przy braku: `-Pjsc.failIfNoLibCpp=true`.
+
 
 ### Wymuszenie fail gdy libc++ nie zostanie dołączone
 

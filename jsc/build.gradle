@@ -185,3 +185,32 @@ gradle.projectsEvaluated {
         }
     }
 }
+
+// Verify that libc++_shared.so is actually packaged for required ABIs inside the produced AAR.
+def requiredAbisProp = (project.findProperty('jsc.requiredAbis') ?: 'arm64-v8a,armeabi-v7a').toString()
+def requiredAbis = requiredAbisProp.split(',').collect { it.trim() }.findAll { it }
+tasks.register('verifyLibCppBundled') {
+    dependsOn 'reBundleAarRelease'
+    doLast {
+        def aar = file("$buildDir/outputs/aar/jsc-release.aar")
+        if (!aar.exists()) throw new GradleException("[verifyLibCppBundled] AAR not found: ${aar}")
+        def zip = zipTree(aar)
+        def missing = []
+        requiredAbis.each { abi ->
+            def hits = zip.matching { include "jni/${abi}/libc++_shared.so" }.files
+            if (hits.empty) missing << abi
+        }
+        if (!missing.empty) {
+            throw new GradleException("[verifyLibCppBundled] Missing libc++_shared.so for ABIs: ${missing} (required: ${requiredAbis})")
+        }
+        logger.lifecycle("[verifyLibCppBundled] OK (present for: ${requiredAbis})")
+    }
+}
+
+// Publication tasks must also verify libc++ presence.
+gradle.projectsEvaluated {
+    ['publishReleasePublicationToMavenLocal','generateMetadataFileForReleasePublication'].each { n ->
+        def t = tasks.findByName(n)
+        if (t) t.dependsOn tasks.named('verifyLibCppBundled')
+    }
+}
