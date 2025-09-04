@@ -81,10 +81,26 @@ tasks.register('bundleLibCppShared') {
             logger.lifecycle("[jsc] Skipping libc++_shared bundling (jsc.bundleLibCpp=false)")
             return
         }
-        def ndkDir = android.ndkDirectory
-        if (!ndkDir || !ndkDir.exists()) {
-            logger.warn("[jsc] NDK not installed on this build agent -> skipping bundling libc++_shared.so (will rely on upstream dependency/app). If your app crashes with missing libc++_shared.so, build with NDK installed.")
+        File ndkDir = null
+        try {
+            ndkDir = android.ndkDirectory
+        } catch (Throwable t) {
+            logger.warn("[jsc] Unable to resolve android.ndkDirectory (${t.class.simpleName}: ${t.message}) -> skipping libc++ bundling")
             return
+        }
+        if (!ndkDir || !ndkDir.exists()) {
+            // Try manual path using sdkDirectory + ndkVersion
+            try {
+                def sdkDir = android.sdkDirectory
+                if (sdkDir && project.android.hasProperty('ndkVersion')) {
+                    def manual = new File(sdkDir, "ndk/${project.android.ndkVersion}")
+                    if (manual.exists()) ndkDir = manual
+                }
+            } catch (Throwable ignore) {}
+            if (!ndkDir || !ndkDir.exists()) {
+                logger.warn("[jsc] NDK directory not found -> skipping libc++_shared.so bundling (will rely on app). Provide NDK or set -Pjsc.bundleLibCpp=false to silence.")
+                return
+            }
         }
         abiList.each { abi ->
             def src = new File(ndkDir, "sources/cxx-stl/llvm-libc++/libs/${abi}/libc++_shared.so")
