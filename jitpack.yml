@@ -2,4 +2,4 @@ jdk: openjdk11
 before_install:
   - ./gradlew -p download-jsc downloadJsc
 install:
-  - ./gradlew clean :jsc:assembleRelease :jsc-intl:assembleRelease :quickjs:assembleRelease :jsc:publishReleasePublicationToMavenLocal :jsc-intl:publishReleasePublicationToMavenLocal :quickjs:publishReleasePublicationToMavenLocal -x test -x lint --no-daemon --stacktrace
+  - ./gradlew clean :jsc:verifySingleJscEmbed :jsc:publishReleasePublicationToMavenLocal -x test -x lint --no-daemon --stacktrace

@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 Dependency:
 
 ```gradle
-implementation "com.github.feleko:jsc:1.0.15"
+implementation "com.github.feleko:jsc:1.0.16"
 ```
 
 ## Integration – zasady bezpiecznego użycia JSC
