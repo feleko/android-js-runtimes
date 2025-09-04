@@ -108,18 +108,39 @@ tasks.register('bundleLibCppShared') {
                 }
             }
         }
+        int copied = 0
+        def tripleMap = [
+            'armeabi-v7a':'arm-linux-androideabi',
+            'arm64-v8a':'aarch64-linux-android',
+            'x86':'i686-linux-android',
+            'x86_64':'x86_64-linux-android'
+        ]
         abiList.each { abi ->
-            def src = new File(ndkDir, "sources/cxx-stl/llvm-libc++/libs/${abi}/libc++_shared.so")
-            if (!src.exists()) {
-                logger.warn("[jsc] libc++_shared.so not found for ABI ${abi} at ${src}. ABI will be skipped.")
+            List<File> candidates = []
+            // Legacy (pre-r23)
+            candidates << new File(ndkDir, "sources/cxx-stl/llvm-libc++/libs/${abi}/libc++_shared.so")
+            // New (r23+) layouts
+            def prebuiltRoot = new File(ndkDir, "toolchains/llvm/prebuilt")
+            if (prebuiltRoot.exists()) {
+                prebuiltRoot.eachDir { d ->
+                    def f = new File(d, "sysroot/usr/lib/${tripleMap[abi]}/libc++_shared.so")
+                    if (f.exists()) candidates << f
+                }
+            }
+            def src = candidates.find { it.exists() }
+            if (!src) {
+                logger.warn("[jsc] libc++_shared.so not found for ABI ${abi} (checked legacy + new layouts). Skipping.")
             } else {
                 def destDir = new File("$buildDir/generated/jniLibs/${abi}")
                 destDir.mkdirs()
-                project.copy { spec ->
-                    spec.from(src)
-                    spec.into(destDir)
-                }
+                project.copy { spec -> spec.from(src); spec.into(destDir) }
+                copied++
+                logger.lifecycle("[jsc] Copied libc++_shared.so for ${abi} from ${src}")
             }
+        }
+        if (copied == 0) {
+            def msg2 = "[jsc] No libc++_shared.so copied for any ABI."
+            if (failIfNoLibCpp) throw new GradleException(msg2) else logger.warn(msg2)
         }
     }
 }
