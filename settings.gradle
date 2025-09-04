@@ -19,4 +19,9 @@ pluginManagement {
 }
 
 rootProject.name = 'fast-development-android-js-runtimes'
-include ":quickjs", ":jsc", ":jsc-intl"
+
+// Single-module build (only :jsc). Other historical modules (quickjs, jsc-intl)
+// intentionally not included to keep JitPack artifact surface minimal.
+// To restore them, uncomment:
+// include(":jsc", ":quickjs", ":jsc-intl")
+include(":jsc")

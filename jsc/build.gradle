@@ -18,12 +18,8 @@ repositories {
     google()
     mavenCentral()
     maven {
-        // Local Maven repo containing AARs with JSC library built for Android
+        // Local Maven repo containing AAR with JSC library (single revision)
         url "$projectDir/../download-jsc/libs/250231.0.0/package/dist"
-    }
-    maven {
-        // Local Maven repo containing AARs with JSC library built for Android
-        url "$projectDir/../download-jsc/libs/245459.0.0/package/dist"
     }
 }
 
@@ -40,6 +36,15 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildTypes {
+        release {
+            // Include full debug symbols for native crash symbolication
+            if (this.hasProperty('debugSymbolLevel')) {
+                debugSymbolLevel 'FULL'
+            }
+        }
     }
 
     defaultConfig {
@@ -94,3 +99,25 @@ dependencies {
     // Single JSC revision (r250231) to avoid ABI conflicts and duplicate libjsc.so
     embed "org.webkit:android-jsc:r250231"
 }
+
+// Guard task: fail build if more than one android-jsc embed dependency is present
+tasks.register('verifySingleJscEmbed') {
+    doLast {
+        def configsToCheck = configurations.matching { it.name in ['implementation','embed','api'] }
+        def allRefs = []
+        configsToCheck.each { cfg ->
+            cfg.allDependencies.each { dep ->
+                if (dep.group == 'org.webkit' && dep.name.startsWith('android-jsc')) {
+                    allRefs << "${dep.group}:${dep.name}:${dep.version ?: 'unspecified'}"
+                }
+            }
+        }
+        def unique = allRefs.unique()
+        if (unique.size() > 1) {
+            throw new GradleException("[verifySingleJscEmbed] Multiple android-jsc variants detected: ${unique}")
+        }
+        logger.lifecycle("[verifySingleJscEmbed] OK (found: ${unique})")
+    }
+}
+
+preBuild.dependsOn tasks.named('verifySingleJscEmbed')
