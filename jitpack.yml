@@ -1,5 +1,6 @@
 jdk: openjdk11
 before_install:
   - ./gradlew -p download-jsc downloadJsc
+  - echo y | sdkmanager "ndk;21.4.7075529"
 install:
-  - ./gradlew clean :jsc:verifySingleJscEmbed :jsc:publishReleasePublicationToMavenLocal -x test -x lint --no-daemon --stacktrace
+  - ./gradlew clean :jsc:verifySingleJscEmbed :jsc:publishReleasePublicationToMavenLocal -Pjsc.failIfNoLibCpp=true -x test -x lint --no-daemon --stacktrace

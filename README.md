@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 Dependency:
 
 ```gradle
-implementation "com.github.feleko:jsc:1.0.20"
+implementation "com.github.feleko:jsc:1.0.21"
 ```
 
 ## Integration – zasady bezpiecznego użycia JSC
@@ -51,6 +51,12 @@ Jeśli Twoja aplikacja (lub inne AAR-y) już dostarczają `libc++_shared.so`, mo
 ```
 
 Domyślnie `jsc.bundleLibCpp=true`.
+
+### Wymuszenie fail gdy libc++ nie zostanie dołączone
+Jeśli chcesz upewnić się, że build NIE przejdzie gdy nie uda się znaleźć NDK / skopiować `libc++_shared.so`:
+```
+./gradlew -Pjsc.failIfNoLibCpp=true :jsc:assembleRelease
+```
 
 ## License
 

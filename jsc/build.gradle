@@ -75,6 +75,7 @@ android {
 // the app can crash at runtime with: dlopen failed: library "libc++_shared.so" not found.
 def abiList = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
 def bundleLibCpp = (project.findProperty('jsc.bundleLibCpp') ?: 'true').toString().toBoolean()
+def failIfNoLibCpp = (project.findProperty('jsc.failIfNoLibCpp') ?: 'false').toString().toBoolean()
 tasks.register('bundleLibCppShared') {
     doLast {
         if (!bundleLibCpp) {
@@ -88,7 +89,7 @@ tasks.register('bundleLibCppShared') {
             logger.warn("[jsc] Unable to resolve android.ndkDirectory (${t.class.simpleName}: ${t.message}) -> skipping libc++ bundling")
             return
         }
-        if (!ndkDir || !ndkDir.exists()) {
+    if (!ndkDir || !ndkDir.exists()) {
             // Try manual path using sdkDirectory + ndkVersion
             try {
                 def sdkDir = android.sdkDirectory
@@ -98,8 +99,13 @@ tasks.register('bundleLibCppShared') {
                 }
             } catch (Throwable ignore) {}
             if (!ndkDir || !ndkDir.exists()) {
-                logger.warn("[jsc] NDK directory not found -> skipping libc++_shared.so bundling (will rely on app). Provide NDK or set -Pjsc.bundleLibCpp=false to silence.")
-                return
+                def msg = "[jsc] NDK directory not found -> skipping libc++_shared.so bundling. Provide NDK, or disable (-Pjsc.bundleLibCpp=false)."
+                if (failIfNoLibCpp) {
+                    throw new GradleException(msg + " (failIfNoLibCpp=true)")
+                } else {
+                    logger.warn(msg)
+                    return
+                }
             }
         }
         abiList.each { abi ->
